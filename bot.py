@@ -34,9 +34,10 @@ org_loc4 = 29.825936
 # AMCP
 org_loc5 = 59.881671
 org_loc6 = 29.830563
-result = [0, 0, 0]
 
-org_loc = (org_loc3, org_loc4)
+org_loc7, org_loc8 = 59.87341478785189, 29.827494102129958
+
+org_loc = (org_loc7, org_loc8)
 
 bands_nom1 = [
         "куросио (Шемякин Лев)",
@@ -117,7 +118,7 @@ async def geo_start(msg: types.Message, state: FSMContext):
     people_loc = (lat, lon)
     if geo.geodesic(org_loc, people_loc).m < 300:
         await state.set_state(Form.nom1)
-        await msg.answer("Вы допущены к голосованию! В голосовании будет 3 номинации: лучший вокал, лучший инструментал, лучшее выступление. Выбирай внимаетльно",
+        await msg.answer("Вы допущены к голосованию! В голосовании будет 3 номинации: лучший вокал, лучший инструментал, лучшее выступление. Выбирай внимательно",
                         reply_markup=types.ReplyKeyboardRemove())
         keyboard = types.ReplyKeyboardMarkup(
                 keyboard=[
@@ -193,7 +194,6 @@ async def biba_comm(msg: types.Message, state: FSMContext):
     message += f"{bands_nom1[ind]} \n{result['Лучшее выступление'][ind]} голосов"
 
     await msg.answer(message)
-
 
 
 @form_router.message(Command("bibaall"))
