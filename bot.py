@@ -3,11 +3,14 @@ import logging
 import asyncio
 
 import geopy.distance as geo
+from aiogram import F
 from aiogram import Bot, Dispatcher, types, Router
 from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.filters import Command, CommandStart
+from aiogram.filters.callback_data import CallbackData
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 import config
 
@@ -16,6 +19,10 @@ form_router = Router()
 
 # Включаем логирование, чтобы не пропустить важные сообщения
 logging.basicConfig(level=logging.INFO)
+
+bot = Bot(token=config.TOKEN, parse_mode=ParseMode.HTML)
+dp = Dispatcher()
+dp.include_router(form_router)
 
 
 # Zocollo
@@ -31,16 +38,51 @@ result = [0, 0, 0]
 
 org_loc = (org_loc3, org_loc4)
 
-bands = [
-        "Группа 1",
-        "Группа 2",
-        "Группа 3",
+bands_nom1 = [
+        "куросио (Шемякин Лев)",
+        "Ринат",
+        "сам по себе (Дима)",
+        "Колизей (Оля Вагапова, Костя Богданов, Дима Бедяев)",
+        "Не я первый, не я последний или просто Дима Кривошей (Дима Кривошей)",
+        "Самуил Налисин и Юлия Габелко",
+        "Самуил Налисин",
+        "поля и алиса (Полина Золотухина и Алиса Никифорова)",
+        "скайрекс (Никита Измайлов)",
+        "поля и алиса (Полина Золотухина и Алиса Никифорова)",
+        ]
+
+bands_nom2 = [
+        "куросио (Шемякин Лев)",
+        "Ринат",
+        "сам по себе (Дима)",
+        "Ксения Андреевна (Ксения Костерова)",
+        "Колизей (Оля Вагапова, Костя Богданов, Дима Бедяев)",
+        "Не я первый, не я последний или просто Дима Кривошей (Дима Кривошей)",
+        "Самуил Налисин и Юлия Габелко",
+        "Самуил Налисин",
+        "поля и алиса (Полина Золотухина и Алиса Никифорова)",
+        "скайрекс (Никита Измайлов)",
+        "поля и алиса (Полина Золотухина и Алиса Никифорова)",
+        ]
+
+bands_nom3 = [
+        "куросио (Шемякин Лев)",
+        "Ринат",
+        "сам по себе (Дима)",
+        "Ксения Андреевна (Ксения Костерова)",
+        "Колизей (Оля Вагапова, Костя Богданов, Дима Бедяев)",
+        "Не я первый, не я последний или просто Дима Кривошей (Дима Кривошей)",
+        "Самуил Налисин и Юлия Габелко",
+        "Самуил Налисин",
+        "поля и алиса (Полина Золотухина и Алиса Никифорова)",
+        "скайрекс (Никита Измайлов)",
+        "поля и алиса (Полина Золотухина и Алиса Никифорова)",
         ]
 
 result = {
-        "Лучший вокал": [0]*len(bands),
-        "Лучший инструментал": [0]*len(bands),
-        "Лучшее выступление": [0]*len(bands),
+        "Лучший вокал": [0]*len(bands_nom1),
+        "Лучший инструментал": [0]*len(bands_nom2),
+        "Лучшее выступление": [0]*len(bands_nom3),
         }
 
 
@@ -79,11 +121,12 @@ async def geo_start(msg: types.Message, state: FSMContext):
                         reply_markup=types.ReplyKeyboardRemove())
         keyboard = types.ReplyKeyboardMarkup(
                 keyboard=[
-                    [types.KeyboardButton(text=band) for band in bands]
+                    [types.KeyboardButton(text=bands_nom1[band_ind])]
+                    for band_ind in range(len(bands_nom1))
                 ],
                 resize_keyboard=True
                 )
-        await msg.answer("Выбери лучший вокал",
+        await msg.answer(text="Выбери лучший вокал",
                         reply_markup=keyboard)
     else:
         return await msg.answer("Вы находитесь слишком далеко от клуба! Вы можете попробовать снова.")
@@ -91,28 +134,42 @@ async def geo_start(msg: types.Message, state: FSMContext):
 
 @form_router.message(Form.nom1)
 async def nom1_answer(msg: types.Message, state: FSMContext):
-    if msg.text in bands:
-        result["Лучший вокал"][bands.index(msg.text)] += 1
+    if msg.text in bands_nom1:
+        result["Лучший вокал"][bands_nom1.index(msg.text)] += 1
+        keyboard = types.ReplyKeyboardMarkup(
+                keyboard=[
+                    [types.KeyboardButton(text=band)]
+                    for band in bands_nom2
+                ],
+                resize_keyboard=True
+                )
         await state.set_state(Form.nom2)
-        await msg.answer("Выбери лучший инструментал")
+        await msg.answer("Выбери лучший инструментал", reply_markup=keyboard)
     else:
         await msg.reply("не понял")
 
 
 @form_router.message(Form.nom2)
 async def nom1_answer(msg: types.Message, state: FSMContext):
-    if msg.text in bands:
-        result["Лучший инструментал"][bands.index(msg.text)] += 1
+    if msg.text in bands_nom2:
+        result["Лучший инструментал"][bands_nom2.index(msg.text)] += 1
+        keyboard = types.ReplyKeyboardMarkup(
+                keyboard=[
+                    [types.KeyboardButton(text=band)]
+                    for band in bands_nom3
+                ],
+                resize_keyboard=True
+                )
         await state.set_state(Form.nom3)
-        await msg.answer("Выбери лучшее выступление")
+        await msg.answer("Выбери лучшее выступление", reply_markup=keyboard)
     else:
         await msg.reply("не понял")
 
 
 @form_router.message(Form.nom3)
 async def nom1_answer(msg: types.Message, state: FSMContext):
-    if msg.text in bands:
-        result["Лучшее выступление"][bands.index(msg.text)] += 1
+    if msg.text in bands_nom3:
+        result["Лучшее выступление"][bands_nom3.index(msg.text)] += 1
         await state.set_state(Form.log)
         await msg.answer("Спасибо за участие!")
         print(result)
@@ -121,33 +178,48 @@ async def nom1_answer(msg: types.Message, state: FSMContext):
 
 
 @form_router.message(Command("biba"))
-async def nom1_answer(msg: types.Message, state: FSMContext):
+async def biba_comm(msg: types.Message, state: FSMContext):
     message = ""
-    for key in result:
-        message += f"{key}:\n"
-        for band_ind in range(len(bands)):
-            message += f"-{bands[band_ind]} {result[key][band_ind]} голосов\n"
+    message += f"Лучший вокал:\n"
+    ind = max(range(len(result['Лучший вокал'])), key=lambda x : result['Лучший вокал'][x])
+    message += f"{bands_nom1[ind]} \n{result['Лучший вокал'][ind]} голосов"
+    message += '\n'
+    message += f"Лучший инструментал:\n"
+    ind = max(range(len(result['Лучший инструментал'])), key=lambda x : result['Лучший инструментал'][x])
+    message += f"{bands_nom1[ind]} \n{result['Лучший инструментал'][ind]} голосов"
+    message += '\n'
+    message += f"Лучшее выступление:\n"
+    ind = max(range(len(result['Лучшее выступление'])), key=lambda x : result['Лучшее выступление'][x])
+    message += f"{bands_nom1[ind]} \n{result['Лучшее выступление'][ind]} голосов"
 
     await msg.answer(message)
+
+
+
+@form_router.message(Command("bibaall"))
+async def biba_all(msg: types.Message, state: FSMContext):
+    message = ""
+    message += f"*Лучший вокал:*\n"
+    for ind in range(len(result["Лучший вокал"])):
+        message += f"{bands_nom1[ind]} \n*{result['Лучший вокал'][ind]}* голосов\n"
+    message += "\n"
+
+    message += f"*Лучший инструментал:*\n"
+    for ind in range(len(result["Лучший инструментал"])):
+        message += f"{bands_nom2[ind]} \n*{result['Лучший инструментал'][ind]}* голосов\n"
+    message += "\n"
+
+    message += f"*Лучшее выступление:*\n"
+    for ind in range(len(result["Лучшее выступление"])):
+        message += f"{bands_nom3[ind]} \n*{result['Лучшее выступление'][ind]}* голосов\n"
+
+    await msg.answer(message, parse_mode="Markdown")
     
 
 async def main():
-    bot = Bot(token=config.TOKEN, parse_mode=ParseMode.HTML)
-    dp = Dispatcher()
-    dp.include_router(form_router)
 
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
-    # Запуск бота
-    # start_webhook(
-    #     dispatcher=dp,
-    #     webhook_path=WEBHOOK_PATH,
-    #     on_startup=on_startup,
-    #     on_shutdown=on_shutdown,
-    #     skip_updates=True,
-    #     host=WEBAPP_HOST,
-    #     port=WEBAPP_PORT,
-    # )
     asyncio.run(main())
     
